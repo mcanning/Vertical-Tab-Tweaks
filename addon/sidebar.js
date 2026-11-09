@@ -199,5 +199,5 @@ try {
   queueRefresh();
 } catch {
   newTab.disabled = true;
-  showStatus("Glass Tabs could not connect to this Firefox window.");
+  showStatus("Zendo Tabs could not connect to this Firefox window.");
 }

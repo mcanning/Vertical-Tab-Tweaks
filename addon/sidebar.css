@@ -1,32 +1,26 @@
 :root {
   color-scheme: light dark;
   font: 13px / 1.35 system-ui, sans-serif;
-  --base: #e7edf9;
-  --bloom: #d4c9f5;
-  --light: #f5fcff;
-  --ink: #1a233c;
-  --muted: #4b5871;
-  --accent: #5140ac;
-  --edge: rgb(80 92 140 / 20%);
-  --panel: rgb(255 255 255 / 51%);
-  --hover: rgb(255 255 255 / 65%);
-  --selected: rgb(252 251 255 / 85%);
-  --shadow: rgb(46 56 96 / 12%);
+  --base: #f5f5f7;
+  --ink: #202024;
+  --muted: #555562;
+  --accent: #5b477f;
+  --edge: #d4d4dc;
+  --panel: #ffffff;
+  --hover: #e9e9ee;
+  --selected: #e7e2f4;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --base: #161d2b;
-    --bloom: #33274e;
-    --light: #294552;
-    --ink: #edf1fb;
-    --muted: #bac5dc;
-    --accent: #c7baff;
-    --edge: rgb(186 195 243 / 22%);
-    --panel: rgb(236 241 255 / 7%);
-    --hover: rgb(236 241 255 / 10%);
-    --selected: rgb(224 229 255 / 16%);
-    --shadow: rgb(0 0 0 / 25%);
+    --base: #232329;
+    --ink: #f3f0f7;
+    --muted: #b8b5c1;
+    --accent: #c9b5eb;
+    --edge: #42424b;
+    --panel: #2a2a31;
+    --hover: #32323b;
+    --selected: #3b344c;
   }
 }
 
@@ -39,10 +33,7 @@ body {
   height: 100dvh;
   margin: 0;
   color: var(--ink);
-  background:
-    radial-gradient(ellipse at 4% 0%, var(--bloom), transparent 62%),
-    radial-gradient(ellipse at 104% 26%, var(--light), transparent 61%),
-    var(--base);
+  background: var(--base);
 }
 
 button {
@@ -106,7 +97,6 @@ main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: 
 .tab-row[data-active] {
   background: var(--selected);
   border-color: var(--edge);
-  box-shadow: 0 2px 5px var(--shadow);
 }
 
 .tab-row[data-active]::before {

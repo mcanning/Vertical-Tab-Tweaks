@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Glass Tabs",
-  "version": "1.1.0",
-  "description": "A glass-style vertical tabs sidebar with hover-to-unload and space to drag the Firefox window.",
+  "name": "Zendo Tabs",
+  "version": "1.2.0",
+  "description": "A vertical tabs sidebar with a hover dash to unload tabs and space to drag the Firefox window.",
   "browser_specific_settings": {
     "gecko": {
       "id": "{c18776a4-f523-475e-937b-cba57a6ec7ac}",
@@ -14,7 +14,7 @@
   "icons": { "48": "icon.svg", "96": "icon.svg" },
   "sidebar_action": {
     "default_icon": "icon.svg",
-    "default_title": "Glass Tabs",
+    "default_title": "Zendo Tabs",
     "default_panel": "sidebar.html",
     "open_at_install": true
   },
