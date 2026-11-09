@@ -44,14 +44,15 @@ async function availablePort() {
 async function main() {
   const executable = prepareFirefox();
   const chrome = path.join(profile, 'chrome');
+  const drag = path.join(project, 'firefox', 'vertical-tab-drag');
   fs.mkdirSync(chrome, { recursive: true });
-  fs.copyFileSync(path.join(project, 'firefox', 'vertical-tab-drag', 'userChrome.css'), path.join(chrome, 'userChrome.css'));
+  fs.copyFileSync(path.join(drag, 'userChrome.css'), path.join(chrome, 'userChrome.css'));
   const port = await availablePort();
   fs.writeFileSync(path.join(profile, 'user.js'), [
+    fs.readFileSync(path.join(drag, 'user.js'), 'utf8').trimEnd(),
     `user_pref("marionette.port", ${port});`,
     'user_pref("browser.shell.checkDefaultBrowser", false);',
     'user_pref("sidebar.verticalTabs", true);',
-    'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);',
     'user_pref("browser.tabs.warnOnClose", false);',
     'user_pref("browser.startup.homepage_override.mstone", "ignore");'
   ].join('\n'));
