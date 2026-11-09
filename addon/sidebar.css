@@ -130,7 +130,6 @@ main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: 
 .new-tab { margin-inline-start: auto; }
 .icon-button:hover:not(:disabled) { background: ButtonFace; color: ButtonText; }
 .icon-button:active:not(:disabled) { background: Highlight; color: HighlightText; }
-.row-action:disabled { color: GrayText; cursor: default; }
 .row-action { opacity: 0; pointer-events: none; }
 .tab-row:is(:hover, :focus-within) .row-action { opacity: 1; pointer-events: auto; }
 .row-action[aria-busy="true"] { cursor: progress; }

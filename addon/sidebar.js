@@ -1,4 +1,3 @@
-import { getTabAction, isVisibleHere, unloadTab } from "./unload.js";
 import { enableWindowDrag } from "./window-drag.js";
 
 const { tabs } = browser;
@@ -12,6 +11,10 @@ let windowId;
 let refreshVersion = 0;
 let refreshQueued = false;
 let operating = false;
+
+function isVisibleHere(tab) {
+  return tab.windowId === windowId && !tab.hidden;
+}
 
 function showStatus(message = "") {
   status.textContent = message;
@@ -37,7 +40,7 @@ async function runAction(action, errorMessage, button) {
 function actOnTab(id, action) {
   return async () => {
     const tab = await tabs.get(id);
-    if (!isVisibleHere(tab, windowId)) return false;
+    if (!isVisibleHere(tab)) return false;
     return action(tab);
   };
 }
@@ -52,7 +55,6 @@ function createRow(id) {
   const action = element.querySelector(".row-action");
   const image = element.querySelector("img");
   const row = { element, open, action, image, title: element.querySelector(".tab-title"), pin: element.querySelector(".pin") };
-  let pressedAction;
   element.dataset.tabId = String(id);
 
   image.addEventListener("error", () => { image.hidden = true; });
@@ -65,32 +67,14 @@ function createRow(id) {
     event.preventDefault();
     closeTab(id, action);
   });
-  action.addEventListener("pointerdown", () => { pressedAction = row.kind; });
-  action.addEventListener("pointercancel", () => { pressedAction = undefined; });
   action.addEventListener("click", event => {
-    // Ignore a second click or a click whose dash changed to an X while pressed.
-    const kind = row.kind;
-    const changed = event.detail > 0 && pressedAction !== undefined && pressedAction !== kind;
-    pressedAction = undefined;
-    if (!kind || event.detail > 1 || changed) return;
-    runAction(
-      actOnTab(id, tab => {
-        // Firefox may have started or finished restoring the tab before the row repaints.
-        if (getTabAction(tab) !== kind) return;
-        return kind === "close" ? tabs.remove(tab.id) : unloadTab(tabs, tab, windowId);
-      }),
-      kind === "close" ? "Firefox could not close this tab."
-        : "Firefox kept this tab loaded. If the page has unsaved work, save it and try again.",
-      action,
-    );
+    if (event.detail <= 1) closeTab(id, action);
   });
   return row;
 }
 
 function updateRow(row, tab) {
   const title = tab.title || "Untitled tab";
-  row.kind = getTabAction(tab);
-  const actionLabel = row.kind === "unload" ? "Unload tab" : row.kind === "close" ? "Close tab" : "Tab is loading";
   row.element.toggleAttribute("data-active", !!tab.active);
   row.element.toggleAttribute("data-discarded", !!tab.discarded);
   row.title.textContent = title;
@@ -99,10 +83,7 @@ function updateRow(row, tab) {
   if (tab.active) row.open.setAttribute("aria-current", "true");
   else row.open.removeAttribute("aria-current");
   row.pin.toggleAttribute("hidden", !tab.pinned);
-  row.action.disabled = row.kind === null;
-  row.action.textContent = row.kind === "unload" ? "−" : row.kind === "close" ? "×" : "…";
-  row.action.title = actionLabel;
-  row.action.setAttribute("aria-label", `${actionLabel} ${title}`);
+  row.action.setAttribute("aria-label", `Close tab ${title}`);
 
   // Use only inline favicons already provided by Firefox. No site is contacted.
   const icon = /^data:image\//i.test(tab.favIconUrl ?? "") ? tab.favIconUrl : null;
@@ -155,7 +136,7 @@ function queueRefresh() {
     try {
       const currentTabs = await tabs.query({ windowId });
       if (version === refreshVersion) {
-        render(currentTabs.filter(tab => isVisibleHere(tab, windowId)).sort((a, b) => a.index - b.index));
+        render(currentTabs.filter(isVisibleHere).sort((a, b) => a.index - b.index));
       }
     } catch {
       if (version === refreshVersion) showStatus("Could not read the tabs in this window.");

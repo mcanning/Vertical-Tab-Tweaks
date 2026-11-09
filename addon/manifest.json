@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Zendo Tabs",
-  "version": "1.3.0",
-  "description": "A vertical tabs sidebar with a hover dash to unload tabs and space to drag the Firefox window.",
+  "version": "1.4.0",
+  "description": "A vertical tabs sidebar with space to drag the Firefox window.",
   "browser_specific_settings": {
     "gecko": {
       "id": "{c18776a4-f523-475e-937b-cba57a6ec7ac}",
