@@ -83,8 +83,11 @@ h1 { margin: 0; font-size: 14px; font-weight: 650; }
 
 .tab-count:empty { display: none; }
 
-main { flex: 1; min-height: 0; overflow: auto; }
-#tabs { list-style: none; margin: 0; padding: 6px; }
+main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: auto; }
+#tabs { flex: none; list-style: none; margin: 0; padding: 6px; }
+.window-drag-space { flex: 1; }
+[data-window-drag] { cursor: grab; user-select: none; }
+:root[data-window-dragging] * { cursor: grabbing !important; }
 
 .tab-row {
   position: relative;

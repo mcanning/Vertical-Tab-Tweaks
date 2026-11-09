@@ -1,4 +1,5 @@
 import { canUnload, isVisibleHere, unloadTab } from "./unload.js";
+import { enableWindowDrag } from "./window-drag.js";
 
 const { tabs } = browser;
 const list = document.querySelector("#tabs");
@@ -180,6 +181,7 @@ list.addEventListener("keydown", event => {
 
 try {
   ({ id: windowId } = await browser.windows.getCurrent());
+  enableWindowDrag(browser.windows, windowId, showStatus);
   newTab.addEventListener("click", () => runAction(
     () => tabs.create({ windowId, active: true }),
     "Firefox could not open a new tab.",
