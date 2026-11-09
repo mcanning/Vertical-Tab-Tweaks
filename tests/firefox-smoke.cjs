@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const http = require('node:http');
 const path = require('node:path');
 const net = require('node:net');
 const { spawn } = require('node:child_process');
@@ -9,7 +10,6 @@ const profileRoot = path.join(project, '.test-profiles');
 fs.mkdirSync(profileRoot, { recursive: true });
 const runDirectory = fs.mkdtempSync(path.join(profileRoot, 'firefox-'));
 const profile = path.join(runDirectory, 'sidebar-grab-test');
-const packagePath = path.resolve(process.argv[2] || path.join(project, 'dist/vertical-tab-tweaks-1.2.0.zip'));
 
 function prepareFirefox() {
   const source = String.raw`C:\Program Files\Mozilla Firefox`;
@@ -47,6 +47,7 @@ async function main() {
   const drag = path.join(project, 'firefox', 'vertical-tab-drag');
   fs.mkdirSync(chrome, { recursive: true });
   fs.copyFileSync(path.join(drag, 'userChrome.css'), path.join(chrome, 'userChrome.css'));
+  fs.copyFileSync(path.join(project, 'firefox/addons-page/userContent.css'), path.join(chrome, 'userContent.css'));
   const port = await availablePort();
   fs.writeFileSync(path.join(profile, 'user.js'), [
     fs.readFileSync(path.join(drag, 'user.js'), 'utf8').trimEnd(),
@@ -54,6 +55,7 @@ async function main() {
     'user_pref("browser.shell.checkDefaultBrowser", false);',
     'user_pref("sidebar.verticalTabs", true);',
     'user_pref("browser.tabs.warnOnClose", false);',
+    'user_pref("extensions.ui.lastCategory", "addons://list/extension");',
     'user_pref("browser.startup.homepage_override.mstone", "ignore");'
   ].join('\n'));
   const appData = path.join(profile, 'appdata');
@@ -65,6 +67,7 @@ async function main() {
     ['--headless', '--no-remote', '--profile', profile, '--marionette', '--remote-allow-system-access', 'about:blank'],
     { windowsHide: true, stdio: ['ignore', log, log], env: { ...process.env, MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: '1', MOZ_CRASHREPORTER_DISABLE: '1', APPDATA: appData, LOCALAPPDATA: localData } });
   let socket;
+  let loadServer;
   try {
     for (let attempt = 0; attempt < 48; attempt++) {
       try {
@@ -135,10 +138,10 @@ async function main() {
       const { x, y, width, height } = document.querySelector(arguments[0]).getBoundingClientRect();
       return { x: Math.round(x + width / 2), y: Math.round(y + height / 2) };
     `, [selector]);
-    const clickAt = async point => pointer([
+    const clickAt = (point, button = 0) => pointer([
       { type: 'pointerMove', origin: 'viewport', ...point },
-      { type: 'pointerDown', button: 0 },
-      { type: 'pointerUp', button: 0 },
+      { type: 'pointerDown', button },
+      { type: 'pointerUp', button },
     ]);
     const before = await execute('return gBrowser.tabs.length;');
     await clickAt(await center('#tabs-newtab-button'));
@@ -168,12 +171,12 @@ async function main() {
     );
     const faviconFilter = 'getComputedStyle(document.querySelector(arguments[0] + " .tab-icon-image")).filter';
     const readFilter = name => execute(`return ${faviconFilter};`, [tabSelector(name)]);
-    async function hover(name) {
+    async function hover(name, busy = false) {
       const selector = tabSelector(name);
       await until(`
         const tab = document.querySelector(arguments[0]);
-        return tab.getBoundingClientRect().height > 0 && !tab.hasAttribute('busy');
-      `, [selector]);
+        return tab.getBoundingClientRect().height > 0 && tab.hasAttribute('busy') === arguments[1];
+      `, [selector, busy]);
       await pointer([{ type: 'pointerMove', origin: 'viewport', ...await center(selector) }]);
       await until('return document.querySelector(arguments[0]).matches(":hover");', [selector]);
     }
@@ -199,18 +202,38 @@ async function main() {
     assert.equal(await readFilter('restored'), 'none');
     console.log('PASS: unloaded tabs dim their titles and use grayscale favicons until they reload.');
 
-    const addonId = (await send('Addon:Install', { path: packagePath, temporary: true })).value;
-    assert.equal(addonId, 'sidebar-grab-marker@firefox-sidebar-tools.invalid');
-    await execute('document.getElementById("unified-extensions-button").click();');
-    await until(`
-      const row = Array.from(document.querySelectorAll('unified-extensions-item'))
-        .find(node => node.extension?.id === arguments[0]);
-      return row?.querySelector('.unified-extensions-item-name')?.textContent === 'Vertical Tab Tweaks';
-    `, [addonId]);
-    await execute('gUnifiedExtensions.panel.hidePopup();');
-    await send('Addon:Uninstall', { id: addonId });
-    assert.equal(await execute('return !!document.getElementById("native-tab-minus-style");'), true);
-    console.log('PASS: the tracking-only marker appears in Extensions and the native dash runs independently.');
+    loadServer = http.createServer((request, response) => {
+      response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      response.write('<title>Loading tab</title><p>Still loading');
+    });
+    await new Promise(resolve => loadServer.listen(0, '127.0.0.1', resolve));
+    const slowPage = 'http://127.0.0.1:' + loadServer.address().port + '/slow';
+    const openSlowTab = name => execute(`
+      const tab = gBrowser.addTrustedTab(arguments[0], { inBackground: true });
+      tab.setAttribute('data-test-tab', arguments[1]);
+    `, [slowPage, name]);
+    const waitForPending = name =>
+      until('return document.querySelector(arguments[0])?.hasAttribute("pending");', [tabSelector(name)]);
+    await openSlowTab('loading');
+    await hover('loading', true);
+    assert.match(await icon('loading'), /minus\.svg/);
+    await clickAt(await center(closeSelector('loading')));
+    await waitForPending('loading');
+    console.log('PASS: the hover dash unloads a tab while its page is loading.');
+
+    await openSlowTab('middle-loading');
+    await hover('middle-loading', true);
+    await clickAt(await center(tabSelector('middle-loading')), 1);
+    await waitForPending('middle-loading');
+    await clickAt(await center(tabSelector('restored')), 1);
+    await waitForPending('restored');
+    await clickAt(await center(tabSelector('pinned')), 1);
+    await waitForPending('pinned');
+    await clickAt(await center(tabSelector('internal')), 1);
+    assert.equal(await execute('return !document.querySelector(arguments[0])?.closing;', [tabSelector('internal')]), true);
+    await clickAt(await center(tabSelector('restored')), 1);
+    await until('return !document.querySelector(arguments[0]);', [tabSelector('restored')]);
+    console.log('PASS: middle-click unloads loading, loaded, and pinned tabs, then closes an unloaded tab.');
 
     const toolRules = await until(`
       const root = document.querySelector('sidebar-main')?.shadowRoot;
@@ -241,7 +264,19 @@ async function main() {
     await until('return !gBrowser.tabContainer.verticalMode;');
     assert.equal(await execute(pseudo), 'none');
     console.log('PASS: the drag area is scoped to a vertical tab strip with room below New Tab.');
+
+    const label = 'return getComputedStyle(document.getElementById("main"), "::before").content;';
+    await context('content');
+    await send('WebDriver:Navigate', { url: 'about:addons' });
+    await until('return !!document.querySelector("#main addon-list[type=extension]");');
+    assert.match(await execute(label), /Vertical Tab Tweaks.*Local Firefox customization/);
+    const mockPage = '<main id="main"><addon-list type="extension"></addon-list></main>';
+    await send('WebDriver:Navigate', { url: 'data:text/html,' + encodeURIComponent(mockPage) });
+    assert.equal(await execute(label), 'none');
+    console.log('PASS: the local tracking label appears in the Add-ons Manager and stays off regular pages.');
   } finally {
+    loadServer?.close();
+    loadServer?.closeAllConnections();
     socket?.destroy();
     if (firefox.exitCode === null) firefox.kill();
     fs.closeSync(log);

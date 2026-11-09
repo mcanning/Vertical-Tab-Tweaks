@@ -1,0 +1,14 @@
+@-moz-document url("about:addons") {
+  #main:has(addon-list[type="extension"])::before {
+    content: "Vertical Tab Tweaks\A Local Firefox customization · Sidebar dragging and tab unloading";
+    display: block;
+    margin-block-end: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color, ButtonBorder);
+    border-radius: 8px;
+    background-color: var(--background-color-box, Canvas);
+    color: var(--text-color, CanvasText);
+    line-height: 1.5;
+    white-space: pre-line;
+  }
+}

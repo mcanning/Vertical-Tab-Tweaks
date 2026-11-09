@@ -1,6 +1,6 @@
 # Vertical Tab Tweaks for Firefox
 
-Drag the Firefox window from the blank area below **New Tab** or from the gaps around the bottom sidebar icons. Hover over a loaded, unpinned tab and click **−** to unload it. **Vertical Tab Tweaks** is the tracking entry in Firefox's Extensions list.
+Drag the Firefox window from the blank area below **New Tab** or from the gaps around the bottom sidebar icons. Click the hover dash or middle-click a vertical tab to unload it. Middle-click an unloaded tab to close it. **Vertical Tab Tweaks** appears in the Extensions section of Firefox's Add-ons Manager.
 
 ## Window dragging
 
@@ -11,7 +11,7 @@ Drag the Firefox window from the blank area below **New Tab** or from the gaps a
 
 Remove the rule and restart Firefox to undo the drag customization. If you used the supplied `user.js` setting, you can remove that line and reset the preference in `about:config` when your profile has no other custom stylesheets. Mozilla tracks built-in support in [Firefox bug 1954817](https://bugzilla.mozilla.org/show_bug.cgi?id=1954817).
 
-## Hover dash
+## Tab unloading
 
 The [native dash files](firefox/native-tab-dash/) use Firefox AutoConfig on Windows. They also make the gaps between and beside the bottom tools draggable while the icons remain clickable. The startup preference disables the AutoConfig script sandbox and gives the local configuration script full Firefox privileges.
 
@@ -19,22 +19,16 @@ The [native dash files](firefox/native-tab-dash/) use Firefox AutoConfig on Wind
 2. Make a copy of `native-tab-minus.cfg` and replace `YOUR_PROFILE_DIRECTORY` with the last folder name from **Profile Folder**.
 3. Copy the configured file to `C:\Program Files\Mozilla Firefox\native-tab-minus.cfg`.
 4. Copy `native-tab-minus-prefs.js` to `C:\Program Files\Mozilla Firefox\defaults\pref\`. If Firefox already has an AutoConfig setup, stop before changing it.
-5. Open Firefox. Hover over a loaded, unpinned tab. Clicking **−** unloads that tab, and Firefox shows **×** afterward. With the profile stylesheet enabled, the title dims and the favicon turns grayscale until the tab reloads.
+5. Open Firefox. Hover over an unpinned web tab and click **−** to unload it, even if it is still loading. Firefox shows **×** afterward. With the profile stylesheet enabled, the title dims and the favicon turns grayscale until the tab reloads.
+6. Middle-click a web tab in the vertical tab list to unload it, including pinned tabs and tabs still loading. Middle-click an unloaded tab to close it. Firefox pages that cannot unload stay open.
 
 To undo it, close Firefox and remove the preferences file first, then the configuration file. [Mozilla's AutoConfig documentation](https://support.mozilla.org/en-US/kb/customizing-firefox-using-autoconfig)
 
 ## Vertical Tab Tweaks tracking entry
 
-The [add-on](addon/manifest.json) consists of metadata and an icon. Its description in `about:addons` records the native customizations. Install it for a named row in the Extensions menu.
+Put [the Add-ons Manager stylesheet](firefox/addons-page/userContent.css) at `chrome/userContent.css` in your Firefox profile folder. If the file already exists, append the rule to it. Use the custom stylesheets preference from the window dragging instructions and restart Firefox.
 
-Build the unsigned package in PowerShell from the repository root.
-
-```powershell
-New-Item -ItemType Directory -Force dist | Out-Null
-Compress-Archive -Path addon\* -DestinationPath dist\vertical-tab-tweaks-1.2.0.zip -Force
-```
-
-For a persistent entry, submit the ZIP in [Mozilla's Add-ons Developer Hub](https://addons.mozilla.org/en-US/developers/) and choose **On your own**. After Mozilla signs it, download the `.xpi` and use **⚙ → Install Add-on From File** in `about:addons`. [Mozilla's unlisted signing guide](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/#self-distribution)
+Open `about:addons` and select **Extensions** to see the local tracking label above the list. Remove the rule and restart Firefox to hide the label.
 
 ## What loads after a Firefox restart
 
@@ -42,7 +36,7 @@ When Firefox restores the previous session, it loads the selected tab and normal
 
 ## Verification
 
-After building the marker ZIP, run `node tests/firefox-smoke.cjs` on Windows. The test copies Firefox into a disposable workspace directory and checks the blank drag region, **New Tab** and Settings clicks, dash and unload behavior, and Extensions menu entry. A separate Windows hit test confirmed that the gap below the divider is draggable and the Settings icon is clickable.
+Run `node tests/firefox-smoke.cjs` on Windows. The test copies Firefox into a disposable workspace directory and checks the blank drag region, **New Tab** and Settings clicks, tab unloading, and the Add-ons Manager label. A separate Windows hit test confirmed that the gap below the divider is draggable and the Settings icon is clickable.
 
 ## Git history
 
