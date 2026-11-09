@@ -1,5 +1,7 @@
-export function canUnload(tab) {
-  return !tab.discarded && /^(https?:|file:|data:|blob:|about:reader\?)/i.test(tab.url ?? "");
+export function getTabAction(tab) {
+  if (tab.discarded) return "close";
+  if (tab.status === "loading" || !tab.url) return null;
+  return /^(https?:|file:|data:|blob:|about:reader\?)/i.test(tab.url) ? "unload" : "close";
 }
 
 export function isVisibleHere(tab, windowId) {
@@ -17,7 +19,7 @@ export async function unloadTab(tabs, target, windowId) {
     // The user may have switched, moved, or unloaded the tab during the query.
     const current = await tabs.get(target.id);
     if (!isVisibleHere(current, windowId)) return false;
-    if (!canUnload(current)) return !!current.discarded;
+    if (getTabAction(current) !== "unload") return !!current.discarded;
     if (current.active) {
       if (candidates.length) {
         const next = await tabs.get(candidates[0].id);
@@ -33,7 +35,7 @@ export async function unloadTab(tabs, target, windowId) {
 
   const before = await tabs.get(target.id);
   if (!isVisibleHere(before, windowId) || before.active) return false;
-  if (!canUnload(before)) return !!before.discarded;
+  if (getTabAction(before) !== "unload") return !!before.discarded;
 
   await tabs.discard(before.id);
   // Firefox may resolve the request without unloading a page with unsaved work.

@@ -1,27 +1,6 @@
 :root {
   color-scheme: light dark;
   font: 13px / 1.35 system-ui, sans-serif;
-  --base: #f5f5f7;
-  --ink: #202024;
-  --muted: #555562;
-  --accent: #5b477f;
-  --edge: #d4d4dc;
-  --panel: #ffffff;
-  --hover: #e9e9ee;
-  --selected: #e7e2f4;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --base: #232329;
-    --ink: #f3f0f7;
-    --muted: #b8b5c1;
-    --accent: #c9b5eb;
-    --edge: #42424b;
-    --panel: #2a2a31;
-    --hover: #32323b;
-    --selected: #3b344c;
-  }
 }
 
 * { box-sizing: border-box; }
@@ -32,8 +11,6 @@ body {
   flex-direction: column;
   height: 100dvh;
   margin: 0;
-  color: var(--ink);
-  background: var(--base);
 }
 
 button {
@@ -46,7 +23,7 @@ button {
 }
 
 button:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid Highlight;
   outline-offset: -2px;
 }
 
@@ -56,8 +33,7 @@ button:focus-visible {
   gap: 8px;
   min-height: 46px;
   padding: 6px 10px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--edge);
+  border-bottom: 1px solid ButtonBorder;
 }
 
 .panel-mark { width: 21px; height: 21px; }
@@ -65,9 +41,9 @@ h1 { margin: 0; font-size: 14px; font-weight: 650; }
 
 .tab-count {
   padding: 1px 6px;
-  border: 1px solid var(--edge);
+  border: 1px solid ButtonBorder;
   border-radius: 10px;
-  color: var(--muted);
+  color: GrayText;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
@@ -79,6 +55,22 @@ main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: 
 .window-drag-space { flex: 1; }
 [data-window-drag] { cursor: grab; user-select: none; }
 :root[data-window-dragging] * { cursor: grabbing !important; }
+
+.window-drag-footer {
+  display: grid;
+  place-items: center;
+  flex: none;
+  min-height: 26px;
+  border-top: 1px solid ButtonBorder;
+}
+
+.window-drag-footer::before {
+  width: 24px;
+  height: 2px;
+  border-radius: 1px;
+  background: GrayText;
+  content: "";
+}
 
 .tab-row {
   position: relative;
@@ -92,20 +84,13 @@ main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: 
   border-radius: 8px;
 }
 
-.tab-row:is(:hover, :focus-within) { background: var(--hover); }
-
-.tab-row[data-active] {
-  background: var(--selected);
-  border-color: var(--edge);
-}
-
 .tab-row[data-active]::before {
   position: absolute;
   inset-block: 8px;
   inset-inline-start: 0;
   width: 3px;
   border-radius: 0 3px 3px 0;
-  background: var(--accent);
+  background: currentColor;
   content: "";
   pointer-events: none;
 }
@@ -122,14 +107,13 @@ main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: 
   text-align: start;
 }
 
-.tab-icon { display: grid; flex: none; color: var(--muted); }
+.tab-icon { display: grid; flex: none; }
 .tab-icon > * { grid-area: 1 / 1; width: 16px; height: 16px; }
 .tab-icon:has(img:not([hidden])) svg { visibility: hidden; }
 .tab-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.pin { width: 13px; height: 13px; flex: none; color: var(--muted); }
+.pin { width: 13px; height: 13px; flex: none; }
 .tab-row[data-active] .tab-title { font-weight: 650; }
-.tab-row[data-discarded] :is(.tab-title, .tab-icon) { color: var(--muted); }
-.tab-row[data-discarded] .tab-icon { opacity: .68; }
+.tab-row[data-discarded] :is(.tab-title, .tab-icon) { color: GrayText; }
 
 .icon-button {
   display: grid;
@@ -141,12 +125,12 @@ main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: 
   border-radius: 6px;
   font-size: 19px;
   line-height: 1;
-  color: var(--muted);
 }
 
 .new-tab { margin-inline-start: auto; }
-.icon-button:hover { background: var(--panel); color: var(--ink); }
-.icon-button:active { background: var(--edge); }
+.icon-button:hover:not(:disabled) { background: ButtonFace; color: ButtonText; }
+.icon-button:active:not(:disabled) { background: Highlight; color: HighlightText; }
+.row-action:disabled { color: GrayText; cursor: default; }
 .row-action { opacity: 0; pointer-events: none; }
 .tab-row:is(:hover, :focus-within) .row-action { opacity: 1; pointer-events: auto; }
 .row-action[aria-busy="true"] { cursor: progress; }
@@ -158,12 +142,10 @@ main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: 
 #status {
   margin: 0;
   padding: 8px 10px;
-  border-top: 1px solid var(--edge);
-  background: var(--panel);
+  border-top: 1px solid ButtonBorder;
   overflow-wrap: anywhere;
 }
 
 @media (forced-colors: active) {
   .tab-row[data-active] { border-color: Highlight; }
-  button:focus-visible { outline-color: Highlight; }
 }

@@ -1,4 +1,4 @@
-import { canUnload, isVisibleHere, unloadTab } from "./unload.js";
+import { getTabAction, isVisibleHere, unloadTab } from "./unload.js";
 import { enableWindowDrag } from "./window-drag.js";
 
 const { tabs } = browser;
@@ -69,26 +69,28 @@ function createRow(id) {
   action.addEventListener("pointercancel", () => { pressedAction = undefined; });
   action.addEventListener("click", event => {
     // Ignore a second click or a click whose dash changed to an X while pressed.
-    const changed = event.detail > 0 && pressedAction !== undefined && pressedAction !== row.kind;
+    const kind = row.kind;
+    const changed = event.detail > 0 && pressedAction !== undefined && pressedAction !== kind;
     pressedAction = undefined;
-    if (event.detail > 1 || changed) return;
-    if (row.kind === "close") {
-      closeTab(id, action);
-    } else {
-      runAction(
-        actOnTab(id, tab => tab.discarded || (canUnload(tab) && unloadTab(tabs, tab, windowId))),
-        "Firefox kept this tab loaded. If the page has unsaved work, save it and try again.",
-        action,
-      );
-    }
+    if (!kind || event.detail > 1 || changed) return;
+    runAction(
+      actOnTab(id, tab => {
+        // Firefox may have started or finished restoring the tab before the row repaints.
+        if (getTabAction(tab) !== kind) return;
+        return kind === "close" ? tabs.remove(tab.id) : unloadTab(tabs, tab, windowId);
+      }),
+      kind === "close" ? "Firefox could not close this tab."
+        : "Firefox kept this tab loaded. If the page has unsaved work, save it and try again.",
+      action,
+    );
   });
   return row;
 }
 
 function updateRow(row, tab) {
   const title = tab.title || "Untitled tab";
-  row.kind = canUnload(tab) ? "unload" : "close";
-  const actionLabel = row.kind === "unload" ? "Unload tab" : "Close tab";
+  row.kind = getTabAction(tab);
+  const actionLabel = row.kind === "unload" ? "Unload tab" : row.kind === "close" ? "Close tab" : "Tab is loading";
   row.element.toggleAttribute("data-active", !!tab.active);
   row.element.toggleAttribute("data-discarded", !!tab.discarded);
   row.title.textContent = title;
@@ -97,7 +99,8 @@ function updateRow(row, tab) {
   if (tab.active) row.open.setAttribute("aria-current", "true");
   else row.open.removeAttribute("aria-current");
   row.pin.toggleAttribute("hidden", !tab.pinned);
-  row.action.textContent = row.kind === "unload" ? "−" : "×";
+  row.action.disabled = row.kind === null;
+  row.action.textContent = row.kind === "unload" ? "−" : row.kind === "close" ? "×" : "…";
   row.action.title = actionLabel;
   row.action.setAttribute("aria-label", `${actionLabel} ${title}`);
 
