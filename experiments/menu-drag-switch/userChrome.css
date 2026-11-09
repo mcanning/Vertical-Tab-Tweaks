@@ -1,0 +1,16 @@
+/* The menu switch controls this rule through its Firefox action badge. */
+@-moz-document url("chrome://browser/content/browser.xhtml") {
+  :root:has(.unified-extensions-item-action-button[data-extensionid="zendo-grip-menu-switch@firefox-sidebar-tools.invalid"][badge="ON"]) {
+    #tabbrowser-arrowscrollbox[orient="vertical"]:not([overflowing]) > #tabbrowser-arrowscrollbox-periphery {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+
+      &::after {
+        content: "";
+        flex-grow: 1;
+        -moz-window-dragging: drag;
+      }
+    }
+  }
+}

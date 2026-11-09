@@ -44,6 +44,8 @@ The history includes the rollback of both native dash attempts and the original 
 
 Firefox's built-in sidebar supplies the pinned-tab grid and the **Unload Tab** context menu. [Firefox vertical tabs help](https://support.mozilla.org/en-US/kb/use-sidebar-access-tools-and-vertical-tabs), [Firefox tab unloading help](https://support.mozilla.org/en-US/kb/unload-tabs-reduce-memory-usage-firefox)
 
+The [Extensions menu switch experiment](experiments/menu-drag-switch/README.md) pairs a regular add-on entry with a profile stylesheet to switch native sidebar dragging on and off.
+
 Native Windows Mica and Acrylic were evaluated as Firefox settings. Both used `widget.windows.mica` set to `true`. The `widget.windows.mica.toplevel-backdrop` value was `1` for Mica and `2` for Acrylic. The Acrylic trial set `widget.windows.mica.popups` to `0`. The off comparison set `widget.windows.mica` to `false`.
 
 ## Verification
