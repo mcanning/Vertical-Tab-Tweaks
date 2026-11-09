@@ -198,6 +198,27 @@ async function main() {
     assert.equal(await execute('return !!document.getElementById("native-tab-minus-style");'), true);
     console.log('PASS: the tracking-only marker appears in Extensions and the native dash runs independently.');
 
+    const toolRules = await until(`
+      const root = document.querySelector('sidebar-main')?.shadowRoot;
+      const style = root?.getElementById('vertical-sidebar-tools-drag');
+      return style?.sheet?.cssRules[0] ? Array.from(style.sheet.cssRules[0].cssRules, rule => rule.cssText) : null;
+    `);
+    assert.match(toolRules[0], /\.buttons-wrapper.*-moz-window-dragging: drag/);
+    assert.match(toolRules[1], /moz-button.*-moz-window-dragging: no-drag/);
+    const settingsPoint = await until(`
+      const root = document.querySelector('sidebar-main')?.shadowRoot;
+      const button = root?.querySelector('moz-button[view="viewCustomizeSidebar"]');
+      const rect = button?.getBoundingClientRect();
+      return rect?.width && rect.height ? {
+        x: Math.round(rect.x + rect.width / 2),
+        y: Math.round(rect.y + rect.height / 2),
+      } : null;
+    `);
+    await clickAt(settingsPoint);
+    await until('return SidebarController.isOpen && SidebarController.currentID === "viewCustomizeSidebar";');
+    await execute('SidebarController.hide();');
+    console.log('PASS: the tools strip has its drag rule and the Settings button still opens.');
+
     await execute('for (let i = 0; i < 30; i++) gBrowser.addTrustedTab("about:blank", { inBackground: true, skipAnimation: true });');
     await until('return document.getElementById("tabbrowser-arrowscrollbox").hasAttribute("overflowing");');
     const pseudo = 'return getComputedStyle(document.getElementById("tabbrowser-arrowscrollbox-periphery"), "::after").content;';
