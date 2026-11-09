@@ -148,6 +148,13 @@ async function main() {
     await until('return gBrowser.tabs.length === arguments[0] + 1;', [before]);
     console.log('PASS: the blank-area CSS loads and New Tab remains clickable.');
 
+    await execute('gBrowser.selectedTab.setAttribute("data-test-tab", "empty-new-tab");');
+    const emptyTab = '[data-test-tab="empty-new-tab"]';
+    await until('return document.querySelector(arguments[0])?.isEmpty;', [emptyTab]);
+    await clickAt(await center(emptyTab), 1);
+    await until('return !document.querySelector(arguments[0]);', [emptyTab]);
+    console.log('PASS: one middle-click closes a fresh New Tab.');
+
     await execute(`
       const page = 'data:text/html,' + encodeURIComponent('<title>Dash check</title><p>Dash check</p>');
       const tabs = {

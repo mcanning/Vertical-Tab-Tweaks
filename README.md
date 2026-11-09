@@ -1,6 +1,6 @@
 # Vertical Tab Tweaks for Firefox
 
-Drag the Firefox window from the blank area below **New Tab** or from the gaps around the bottom sidebar icons. Click the hover dash or middle-click a vertical tab to unload it. Middle-click an unloaded tab to close it. **Vertical Tab Tweaks** appears in the Extensions section of Firefox's Add-ons Manager.
+Drag the Firefox window from the blank area below **New Tab** or from the gaps around the bottom sidebar icons. Click the hover dash or middle-click a vertical tab to unload it. Middle-click an empty or unloaded tab to close it. **Vertical Tab Tweaks** appears in the Extensions section of Firefox's Add-ons Manager.
 
 ## Window dragging
 
@@ -20,7 +20,7 @@ The [native dash files](firefox/native-tab-dash/) use Firefox AutoConfig on Wind
 3. Copy the configured file to `C:\Program Files\Mozilla Firefox\native-tab-minus.cfg`.
 4. Copy `native-tab-minus-prefs.js` to `C:\Program Files\Mozilla Firefox\defaults\pref\`. If Firefox already has an AutoConfig setup, stop before changing it.
 5. Open Firefox. Hover over an unpinned web tab and click **−** to unload it, even if it is still loading. Firefox shows **×** afterward. With the profile stylesheet enabled, the title dims and the favicon turns grayscale until the tab reloads.
-6. Middle-click a web tab in the vertical tab list to unload it, including pinned tabs and tabs still loading. Middle-click an unloaded tab to close it. Firefox pages that cannot unload stay open.
+6. Middle-click a web tab in the vertical tab list to unload it, including pinned tabs and tabs still loading. An empty **New Tab** or an unloaded tab closes on the first middle-click. Firefox pages that cannot unload stay open.
 
 To undo it, close Firefox and remove the preferences file first, then the configuration file. [Mozilla's AutoConfig documentation](https://support.mozilla.org/en-US/kb/customizing-firefox-using-autoconfig)
 
