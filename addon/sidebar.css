@@ -1,60 +1,36 @@
 :root {
   color-scheme: light dark;
-  font: 13px / 1.35 system-ui, sans-serif;
+  font: 13px / 1.4 system-ui, sans-serif;
 }
-
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
 
 body {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  min-height: 100dvh;
   margin: 0;
+  cursor: grab;
+  user-select: none;
 }
 
-button {
-  appearance: none;
-  border: 0;
-  font: inherit;
-  color: inherit;
-  background: none;
-  cursor: pointer;
-}
-
-button:focus-visible {
-  outline: 2px solid Highlight;
-  outline-offset: -2px;
-}
+:root[data-window-dragging] body { cursor: grabbing; }
 
 .panel-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 46px;
-  padding: 6px 10px;
+  padding: 10px 12px;
   border-bottom: 1px solid ButtonBorder;
 }
 
-.panel-mark { width: 21px; height: 21px; }
 h1 { margin: 0; font-size: 14px; font-weight: 650; }
 
-.tab-count {
-  padding: 1px 6px;
-  border: 1px solid ButtonBorder;
-  border-radius: 10px;
-  color: GrayText;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
+main {
+  flex: 1;
+  padding: 12px;
 }
 
-.tab-count:empty { display: none; }
-
-main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: auto; }
-#tabs { flex: none; list-style: none; margin: 0; padding: 6px; }
-.window-drag-space { flex: 1; }
-[data-window-drag] { cursor: grab; user-select: none; }
-:root[data-window-dragging] * { cursor: grabbing !important; }
+p { margin: 0; }
+#status { margin-block-start: 10px; }
 
 .window-drag-footer {
   display: grid;
@@ -70,81 +46,4 @@ main { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: 
   border-radius: 1px;
   background: GrayText;
   content: "";
-}
-
-.tab-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  min-height: 34px;
-  margin-bottom: 2px;
-  padding-inline-end: 3px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-}
-
-.tab-row[data-active]::before {
-  position: absolute;
-  inset-block: 8px;
-  inset-inline-start: 0;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: currentColor;
-  content: "";
-  pointer-events: none;
-}
-
-.open-tab {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  gap: 8px;
-  min-width: 0;
-  min-height: 32px;
-  padding: 4px 3px 4px 8px;
-  border-radius: 7px;
-  text-align: start;
-}
-
-.tab-icon { display: grid; flex: none; }
-.tab-icon > * { grid-area: 1 / 1; width: 16px; height: 16px; }
-.tab-icon:has(img:not([hidden])) svg { visibility: hidden; }
-.tab-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.pin { width: 13px; height: 13px; flex: none; }
-.tab-row[data-active] .tab-title { font-weight: 650; }
-.tab-row[data-discarded] :is(.tab-title, .tab-icon) { color: GrayText; }
-
-.icon-button {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border-radius: 6px;
-  font-size: 19px;
-  line-height: 1;
-}
-
-.new-tab { margin-inline-start: auto; }
-.icon-button:hover:not(:disabled) { background: ButtonFace; color: ButtonText; }
-.icon-button:active:not(:disabled) { background: Highlight; color: HighlightText; }
-.row-action { opacity: 0; pointer-events: none; }
-.tab-row:is(:hover, :focus-within) .row-action { opacity: 1; pointer-events: auto; }
-.row-action[aria-busy="true"] { cursor: progress; }
-
-@media (hover: none) {
-  .row-action { opacity: 1; pointer-events: auto; }
-}
-
-#status {
-  margin: 0;
-  padding: 8px 10px;
-  border-top: 1px solid ButtonBorder;
-  overflow-wrap: anywhere;
-}
-
-@media (forced-colors: active) {
-  .tab-row[data-active] { border-color: Highlight; }
 }
