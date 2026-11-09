@@ -1,0 +1,16 @@
+/* Drag the window from empty vertical-tab space. */
+#vertical-tabs,
+#tabbrowser-tabs[orient="vertical"],
+#tabbrowser-tabs[orient="vertical"] #tabbrowser-arrowscrollbox {
+  -moz-window-dragging: drag !important;
+}
+
+/* Keep tabs, group labels, and buttons interactive. */
+#vertical-tabs :is(
+  .tabbrowser-tab,
+  .tab-group-label,
+  toolbarbutton,
+  button
+) {
+  -moz-window-dragging: no-drag !important;
+}

@@ -1,0 +1,23 @@
+/* BEGIN Native Sidebar Glass 1.0
+   Requires Windows 11 transparency and widget.windows.mica=true.
+   Keep page content and tab highlights opaque; expose only the browser backdrop.
+*/
+@media (-moz-windows-mica) and (not (forced-colors)) {
+  :root:not([lwtheme]) {
+    /* Firefox normally puts a 60% dark/light layer over Acrylic. */
+    background-color: transparent !important;
+  }
+  :root:not([lwtheme]) body,
+  :root:not([lwtheme]) #browser,
+  :root:not([lwtheme]) #sidebar-container,
+  :root:not([lwtheme]) sidebar-main,
+  :root:not([lwtheme]) #vertical-tabs,
+  :root:not([lwtheme]) #tabbrowser-tabs {
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+  :root:not([lwtheme]) sidebar-main {
+    --sidebar-launcher-surface-color: transparent !important;
+  }
+}
+/* END Native Sidebar Glass */
