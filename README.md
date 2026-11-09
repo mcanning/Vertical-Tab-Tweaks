@@ -1,70 +1,47 @@
 # Firefox Sidebar Tools
 
-This repository reconstructs the project history from the saved Firefox customization files and add-on packages. The tags mark those snapshots.
+Drag the Firefox window from the blank area below **New Tab** in its built-in vertical sidebar. Hover over a loaded, unpinned tab and click **−** to unload it. **Sidebar Grab** is the tracking entry in Firefox's Extensions list.
 
-## Drag Firefox from the built-in vertical tab strip
+## Window dragging
 
-The [profile stylesheet](firefox/vertical-tab-drag/userChrome.css) targets the blank space between **New Tab** and the bottom tools in Firefox's own vertical sidebar. Firefox tracks built-in support in [bug 1954817](https://bugzilla.mozilla.org/show_bug.cgi?id=1954817).
+1. Open `about:support` in Firefox and use **Profile Folder → Open Folder**.
+2. In that folder, place [the drag stylesheet](firefox/vertical-tab-drag/userChrome.css) at `chrome/userChrome.css`. If a stylesheet exists, append this rule to it.
+3. Set `toolkit.legacyUserProfileCustomizations.stylesheets` to `true` in `about:config` and restart Firefox.
+4. Drag the blank area between **New Tab** and the bottom tools. The rule applies where the vertical tab list has room below New Tab.
 
-1. Open `about:support` in Firefox. Next to **Profile Folder**, click **Open Folder**.
-2. In that folder, place the stylesheet at `chrome/userChrome.css`. If the file already exists, append the rule to it.
-3. Set `toolkit.legacyUserProfileCustomizations.stylesheets` to `true` in `about:config`, then restart Firefox.
-4. With vertical tabs on and the window restored, try dragging in the space below **New Tab**.
+Remove the rule and restart Firefox to undo the drag customization. Mozilla tracks built-in support in [Firefox bug 1954817](https://bugzilla.mozilla.org/show_bug.cgi?id=1954817).
 
-Remove the rule and restart Firefox to undo it. The Firefox 159.0.1 test profile verified the rule's position, the **New Tab** click, and its exclusion from horizontal and overflowing tab strips. Native window movement still needs a normal Windows window test. [Mozilla's profile stylesheet documentation](https://support.mozilla.org/en-US/kb/contributors-guide-firefox-advanced-customization)
+## Hover dash
 
-## Zendo Grip add-on
+The [native dash files](firefox/native-tab-dash/) use Firefox AutoConfig on Windows. The startup preference disables the AutoConfig script sandbox and gives the local configuration script full Firefox privileges. This is the mechanism for Firefox Release.
 
-[Zendo Grip](addon/manifest.json) opens a drag-only sidebar panel alongside Firefox's built-in vertical tabs. Drag anywhere inside its panel to move a restored Firefox window.
+1. Close Firefox.
+2. Make a copy of `native-tab-minus.cfg` and replace `YOUR_PROFILE_DIRECTORY` with the last folder name from **Profile Folder**.
+3. Copy the configured file to `C:\Program Files\Mozilla Firefox\native-tab-minus.cfg`.
+4. Copy `native-tab-minus-prefs.js` to `C:\Program Files\Mozilla Firefox\defaults\pref\`. If Firefox already has an AutoConfig setup, stop before changing it.
+5. Open Firefox. Hover over a loaded, unpinned tab. Clicking **−** unloads that tab, and Firefox shows **×** afterward.
 
-Run these commands in PowerShell from the repository root to build the unsigned package.
+To undo it, close Firefox and remove the preferences file first, then the configuration file. [Mozilla's AutoConfig documentation](https://support.mozilla.org/en-US/kb/customizing-firefox-using-autoconfig)
 
-```powershell
-New-Item -ItemType Directory -Force dist | Out-Null
-Compress-Archive -Path addon\* -DestinationPath dist\zendo-grip-2.0.0.zip -Force
-```
+## Sidebar Grab tracking entry
 
-In Firefox, open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select the ZIP. Then open **Zendo Grip** from the sidebar tools. For a permanent install in Firefox Release, submit the ZIP for [Mozilla's unlisted signing](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/#self-distribution).
+The [add-on](addon/manifest.json) consists of metadata and an icon. Its description in `about:addons` records the native customizations. Install it for a named row in the Extensions menu.
 
-## History
-
-| Tag | Snapshot |
-| --- | --- |
-| `legacy-firefox-profile` | Original native glass, hover dash, and broad drag rules |
-| `minus-tab-unloader-v1.0.0` | Standalone toolbar button and keyboard shortcut to unload tabs |
-| `glass-tabs-v1.0.0` | Glass Tabs sidebar with hover-to-unload |
-| `glass-tabs-v1.1.0` | Window dragging in the Glass Tabs panel |
-| `zendo-tabs-v1.2.0` | Zendo Tabs rename and removal of custom glass |
-| `zendo-tabs-v1.3.0` | Bottom drag strip and fixes for the unload action on restored tabs |
-| `native-dash-trial` | Narrower native hover dash experiment, with the profile name replaced by a placeholder |
-| `zendo-tabs-v1.4.0` | Hover unload removed and standard close button restored |
-| `zendo-grip-v2.0.0` | Drag-only panel with the tab list and tab permission removed |
-
-The history includes the rollback of both native dash attempts and the original transparency rules. The native dash trials used Firefox's privileged AutoConfig mode.
-
-Firefox's built-in sidebar supplies the pinned-tab grid and the **Unload Tab** context menu. [Firefox vertical tabs help](https://support.mozilla.org/en-US/kb/use-sidebar-access-tools-and-vertical-tabs), [Firefox tab unloading help](https://support.mozilla.org/en-US/kb/unload-tabs-reduce-memory-usage-firefox)
-
-The [Extensions menu switch experiment](experiments/menu-drag-switch/README.md) pairs a regular add-on entry with a profile stylesheet to switch native sidebar dragging on and off.
-
-[Sidebar Grab](experiments/sidebar-grab-marker/manifest.json) is a tracking entry for the Extensions menu. Its description in `about:addons` names the drag stylesheet, hover dash experiment, and Acrylic settings. The package contains only the add-on metadata and icon.
+Build the unsigned package in PowerShell from the repository root.
 
 ```powershell
 New-Item -ItemType Directory -Force dist | Out-Null
-Compress-Archive -Path experiments\sidebar-grab-marker\* -DestinationPath dist\sidebar-grab-marker-1.0.0.zip -Force
+Compress-Archive -Path addon\* -DestinationPath dist\sidebar-grab-marker-1.1.0.zip -Force
 ```
 
-Load the marker through **Load Temporary Add-on** on `about:debugging#/runtime/this-firefox`. Unlisted signing is required for it to stay installed in Firefox Release across restarts.
-
-Native Windows Mica and Acrylic were evaluated as Firefox settings. Both used `widget.windows.mica` set to `true`. The `widget.windows.mica.toplevel-backdrop` value was `1` for Mica and `2` for Acrylic. The Acrylic trial set `widget.windows.mica.popups` to `0`. The off comparison set `widget.windows.mica` to `false`.
+Open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select the ZIP. For a persistent entry in Firefox Release, submit the ZIP for [Mozilla's unlisted signing](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/#self-distribution).
 
 ## Verification
 
-Run with a recent Node.js on Windows. The browser checks use separate test profiles under `.test-profiles`.
+After building the marker ZIP, run `node tests/firefox-smoke.cjs` on Windows. The test copies Firefox into a disposable workspace directory and checks the blank drag region, **New Tab** click, dash and unload behavior, and Extensions menu entry in the same Firefox session.
 
-```powershell
-node tests/firefox-smoke.cjs dist/zendo-grip-2.0.0.zip
-node tests/native-sidebar-css.cjs
-node tests/sidebar-ui.cjs
-```
+## Git history
 
-The first check loads the ZIP in Firefox and tests dragging from the top, middle, and bottom of the add-on panel. The second checks the native stylesheet in Firefox. The last uses Edge to exercise the drag threshold and maximized-window behavior with a mock window API.
+The history was reconstructed from saved files and add-on packages. The tags `legacy-firefox-profile`, `native-dash-trial`, `minus-tab-unloader-v1.0.0`, `glass-tabs-v1.0.0`, `glass-tabs-v1.1.0`, `zendo-tabs-v1.2.0` through `zendo-tabs-v1.4.0`, and `zendo-grip-v2.0.0` identify earlier snapshots. The menu-switch prototype is in commit `4fec3f2`.
+
+The earlier glass trial used Firefox's native Windows backdrop. The `widget.windows.mica.toplevel-backdrop` value was `1` for Mica and `2` for Acrylic. The Acrylic trial set `widget.windows.mica.popups` to `0`. The off comparison set `widget.windows.mica` to `false`.

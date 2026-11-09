@@ -1,23 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Zendo Grip",
-  "version": "2.0.0",
-  "description": "Move the Firefox window by dragging from the Zendo Grip sidebar tool.",
+  "name": "Sidebar Grab",
+  "version": "1.1.0",
+  "description": "Tracking entry for native sidebar window dragging, the hover-to-unload dash, and Firefox Acrylic settings.",
   "browser_specific_settings": {
     "gecko": {
-      "id": "{c18776a4-f523-475e-937b-cba57a6ec7ac}",
+      "id": "sidebar-grab-marker@firefox-sidebar-tools.invalid",
       "strict_min_version": "140.0",
       "data_collection_permissions": { "required": ["none"] }
     }
   },
-  "icons": { "48": "icon.svg", "96": "icon.svg" },
-  "sidebar_action": {
-    "default_icon": "icon.svg",
-    "default_title": "Zendo Grip",
-    "default_panel": "sidebar.html",
-    "open_at_install": false
-  },
-  "content_security_policy": {
-    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
-  }
+  "icons": { "48": "icon.svg", "96": "icon.svg" }
 }

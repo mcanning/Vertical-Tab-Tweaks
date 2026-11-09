@@ -7,8 +7,31 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const project = path.resolve(__dirname, '..');
 const profileRoot = path.join(project, '.test-profiles');
 fs.mkdirSync(profileRoot, { recursive: true });
-const profile = fs.mkdtempSync(path.join(profileRoot, 'firefox-'));
-const packagePath = path.resolve(process.argv[2] || path.join(project, 'dist/zendo-grip-2.0.0.zip'));
+const runDirectory = fs.mkdtempSync(path.join(profileRoot, 'firefox-'));
+const profile = path.join(runDirectory, 'sidebar-grab-test');
+const packagePath = path.resolve(process.argv[2] || path.join(project, 'dist/sidebar-grab-marker-1.1.0.zip'));
+
+function prepareFirefox() {
+  const source = String.raw`C:\Program Files\Mozilla Firefox`;
+  const install = path.join(runDirectory, 'app');
+  fs.mkdirSync(install);
+  for (const file of fs.readdirSync(source, { withFileTypes: true })) {
+    if (file.isFile() && file.name !== 'native-tab-minus.cfg') {
+      fs.copyFileSync(path.join(source, file.name), path.join(install, file.name));
+    }
+  }
+  for (const name of ['browser', 'fonts', 'gmp-clearkey', 'installation_dir_layout']) {
+    if (fs.existsSync(path.join(source, name))) fs.cpSync(path.join(source, name), path.join(install, name), { recursive: true });
+  }
+  const defaults = path.join(install, 'defaults', 'pref');
+  fs.mkdirSync(defaults, { recursive: true });
+  fs.copyFileSync(path.join(source, 'defaults', 'pref', 'channel-prefs.js'), path.join(defaults, 'channel-prefs.js'));
+  const nativeDash = path.join(project, 'firefox', 'native-tab-dash');
+  const cfg = fs.readFileSync(path.join(nativeDash, 'native-tab-minus.cfg'), 'utf8');
+  fs.writeFileSync(path.join(install, 'native-tab-minus.cfg'), cfg.replace('YOUR_PROFILE_DIRECTORY', path.basename(profile)));
+  fs.copyFileSync(path.join(nativeDash, 'native-tab-minus-prefs.js'), path.join(defaults, 'native-tab-minus-prefs.js'));
+  return path.join(install, 'firefox.exe');
+}
 
 async function availablePort() {
   const server = net.createServer();
@@ -19,10 +42,17 @@ async function availablePort() {
 }
 
 async function main() {
+  const executable = prepareFirefox();
+  const chrome = path.join(profile, 'chrome');
+  fs.mkdirSync(chrome, { recursive: true });
+  fs.copyFileSync(path.join(project, 'firefox', 'vertical-tab-drag', 'userChrome.css'), path.join(chrome, 'userChrome.css'));
   const port = await availablePort();
   fs.writeFileSync(path.join(profile, 'user.js'), [
     `user_pref("marionette.port", ${port});`,
     'user_pref("browser.shell.checkDefaultBrowser", false);',
+    'user_pref("sidebar.verticalTabs", true);',
+    'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);',
+    'user_pref("browser.tabs.warnOnClose", false);',
     'user_pref("browser.startup.homepage_override.mstone", "ignore");'
   ].join('\n'));
   const appData = path.join(profile, 'appdata');
@@ -30,7 +60,7 @@ async function main() {
   fs.mkdirSync(appData);
   fs.mkdirSync(localData);
   const log = fs.openSync(path.join(profile, 'process.log'), 'a');
-  const firefox = spawn('C:\\Program Files\\Mozilla Firefox\\firefox.exe',
+  const firefox = spawn(executable,
     ['--headless', '--no-remote', '--profile', profile, '--marionette', '--remote-allow-system-access', 'about:blank'],
     { windowsHide: true, stdio: ['ignore', log, log], env: { ...process.env, MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: '1', MOZ_CRASHREPORTER_DISABLE: '1', APPDATA: appData, LOCALAPPDATA: localData } });
   let socket;
@@ -75,77 +105,106 @@ async function main() {
     });
     const context = value => send('Marionette:SetContext', { value });
     const execute = async (script, args = []) => (await send('WebDriver:ExecuteScript', { script, args, sandbox: null, newSandbox: true })).value;
-    const asyncExecute = async (script, args = []) => (await send('WebDriver:ExecuteAsyncScript', { script, args, sandbox: null, newSandbox: true, scriptTimeout: 20000 })).value;
-    const elementID = value => value['element-6066-11e4-a52e-4f735466cecf'];
-    const find = async selector => (await send('WebDriver:FindElement', { using: 'css selector', value: selector })).value;
-    const click = async selector => send('WebDriver:ElementClick', { id: elementID(await find(selector)) });
     console.log('Session', JSON.stringify(await send('WebDriver:NewSession', { capabilities: { acceptInsecureCerts: false, pageLoadStrategy: 'eager' } })));
     await send('WebDriver:SetTimeouts', { pageLoad: 20000, script: 20000, implicit: 2000 });
-    const addonId = (await send('Addon:Install', { path: packagePath, temporary: true })).value;
-    console.log('Installed test package', addonId);
     await context('chrome');
+    await send('WebDriver:SetWindowRect', { x: 120, y: 120, width: 1100, height: 750 });
 
-    await execute('Services.prefs.setBoolPref("sidebar.verticalTabs", true);');
-    await send('WebDriver:SetWindowRect', { x: 120, y: 120, width: 1000, height: 650 });
-    const info = await execute(`
-      const policy = WebExtensionPolicy.getByID(arguments[0]);
-      return {
-        name: policy.extension.name,
-        panel: policy.getURL('sidebar.html'),
-        sidebarId: Array.from(SidebarController.sidebars.keys()).find(id => id.includes('c18776a4')),
-        autoOpened: SidebarController.isOpen && SidebarController.currentID?.includes('c18776a4'),
-      };
-    `, [addonId]);
-    assert.equal(info.name, 'Zendo Grip');
-    assert.ok(info.sidebarId);
-    assert.equal(info.autoOpened, false);
-
-    const openedPanel = await asyncExecute(`
-      const [id, done] = arguments;
-      (async () => {
-        await SidebarController.show(id);
-        for (let tries = 0; tries < 50; tries++) {
-          const panel = document.getElementById('sidebar')?.contentDocument?.getElementById('webext-panels-browser');
-          if (panel?.currentURI?.scheme === 'moz-extension') return panel.currentURI.spec;
-          await new Promise(resolve => setTimeout(resolve, 50));
-        }
-        throw Error('Could not find the mounted sidebar panel');
-      })().then(done, error => done(String(error)));
-    `, [info.sidebarId]);
-    assert.equal(openedPanel, info.panel);
-    assert.equal(await execute('return gBrowser.tabContainer.verticalMode;'), true);
-    console.log('PASS: Zendo Grip opens from the sidebar tools alongside Firefox vertical tabs.');
-
-    const rect = 'return { left: window.screenX, top: window.screenY, width: window.outerWidth, height: window.outerHeight };';
-    const pointer = actions => send('WebDriver:PerformActions', {
-      actions: [{ type: 'pointer', id: 'grip-mouse', parameters: { pointerType: 'mouse' }, actions }],
-    });
-    for (const edge of ['top', 'middle', 'bottom']) {
-      const point = await execute(`
-        const sidebar = document.getElementById('sidebar');
-        const outer = sidebar.getBoundingClientRect();
-        const inner = sidebar.contentDocument.getElementById('webext-panels-browser').getBoundingClientRect();
-        const y = { top: 20, middle: inner.height / 2, bottom: inner.height - 13 }[arguments[0]];
-        return { x: Math.round(outer.x + inner.x + 35), y: Math.round(outer.y + inner.y + y) };
-      `, [edge]);
-      const before = await execute(rect);
-      await pointer([
-        { type: 'pointerMove', origin: 'viewport', ...point },
-        { type: 'pointerDown', button: 0 },
-        { type: 'pointerMove', origin: 'viewport', x: point.x + 26, y: point.y - 14, duration: 100 },
-        { type: 'pointerUp', button: 0 },
-      ]);
-      let after;
-      for (let i = 0; i < 50; i++) {
-        after = await execute(rect);
-        if (after.left > before.left && after.top < before.top) break;
+    const until = async (script, args = []) => {
+      for (let i = 0; i < 60; i++) {
+        const result = await execute(script, args);
+        if (result) return result;
         await sleep(100);
       }
-      assert.ok(after.left > before.left && after.top < before.top, 'Dragging the ' + edge + ' should move the window');
-      assert.equal(after.width, before.width);
-      assert.equal(after.height, before.height);
-      console.log('PASS: dragging the ' + edge + ' of the sidebar moved the Firefox window.');
+      throw Error('Timed out: ' + script);
+    };
+    await until('return !!document.getElementById("native-tab-minus-style") && gBrowser.tabContainer.verticalMode;');
+
+    const region = await execute(`
+      const periphery = document.getElementById('tabbrowser-arrowscrollbox-periphery');
+      const button = document.getElementById('tabs-newtab-button').getBoundingClientRect();
+      const target = getComputedStyle(periphery, '::after');
+      return { height: parseFloat(target.height), available: periphery.getBoundingClientRect().bottom - button.bottom };
+    `);
+    assert.ok(region.height > 100 && region.height <= region.available + 1);
+    const pointer = actions => send('WebDriver:PerformActions', {
+      actions: [{ type: 'pointer', id: 'sidebar-grab-mouse', parameters: { pointerType: 'mouse' }, actions }],
+    });
+    const center = selector => execute(`
+      const { x, y, width, height } = document.querySelector(arguments[0]).getBoundingClientRect();
+      return { x: Math.round(x + width / 2), y: Math.round(y + height / 2) };
+    `, [selector]);
+    const clickAt = async point => pointer([
+      { type: 'pointerMove', origin: 'viewport', ...point },
+      { type: 'pointerDown', button: 0 },
+      { type: 'pointerUp', button: 0 },
+    ]);
+    const before = await execute('return gBrowser.tabs.length;');
+    await clickAt(await center('#tabs-newtab-button'));
+    await until('return gBrowser.tabs.length === arguments[0] + 1;', [before]);
+    console.log('PASS: the blank-area CSS loads and New Tab remains clickable.');
+
+    await execute(`
+      const page = 'data:text/html,' + encodeURIComponent('<title>Dash check</title><p>Dash check</p>');
+      const tabs = {
+        loaded: gBrowser.addTrustedTab(page, { inBackground: true }),
+        pinned: gBrowser.addTrustedTab(page, { inBackground: true, pinned: true }),
+        internal: gBrowser.addTrustedTab('about:preferences', { inBackground: true }),
+        restored: gBrowser.addTrustedTab(page, {
+          inBackground: true, createLazyBrowser: true, lazyTabTitle: 'Restored on demand',
+        }),
+      };
+      for (const [name, tab] of Object.entries(tabs)) tab.setAttribute('data-test-tab', name);
+    `);
+    const tabSelector = name => '[data-test-tab="' + name + '"]';
+    const closeSelector = name => tabSelector(name) + ' .tab-close-button';
+    const icon = name => execute(
+      'return getComputedStyle(document.querySelector(arguments[0])).listStyleImage;', [closeSelector(name)],
+    );
+    async function hover(name) {
+      const selector = tabSelector(name);
+      await until(`
+        const tab = document.querySelector(arguments[0]);
+        return tab.getBoundingClientRect().height > 0 && !tab.hasAttribute('busy');
+      `, [selector]);
+      await pointer([{ type: 'pointerMove', origin: 'viewport', ...await center(selector) }]);
+      await until('return document.querySelector(arguments[0]).matches(":hover");', [selector]);
     }
+    for (const name of ['pinned', 'internal', 'restored']) {
+      await hover(name);
+      assert.match(await icon(name), /close-12/);
+    }
+    await hover('loaded');
+    assert.match(await icon('loaded'), /minus\.svg/);
+    await clickAt(await center(closeSelector('loaded')));
+    await until('return document.querySelector(arguments[0])?.hasAttribute("pending");', [tabSelector('loaded')]);
+    assert.match(await icon('loaded'), /close-12/);
+    await execute('gBrowser.selectedTab = document.querySelector(arguments[0]);', [tabSelector('restored')]);
+    await hover('restored');
+    await until('return document.querySelector(arguments[0]).hasAttribute("data-native-tab-minus");', [closeSelector('restored')]);
+    console.log('PASS: the native dash unloads a tab and the normal close icon returns.');
+
+    const addonId = (await send('Addon:Install', { path: packagePath, temporary: true })).value;
+    assert.equal(addonId, 'sidebar-grab-marker@firefox-sidebar-tools.invalid');
+    await execute('document.getElementById("unified-extensions-button").click();');
+    await until(`
+      const row = Array.from(document.querySelectorAll('unified-extensions-item'))
+        .find(node => node.extension?.id === arguments[0]);
+      return row?.querySelector('.unified-extensions-item-name')?.textContent === 'Sidebar Grab';
+    `, [addonId]);
+    await execute('gUnifiedExtensions.panel.hidePopup();');
+    await send('Addon:Uninstall', { id: addonId });
+    assert.equal(await execute('return !!document.getElementById("native-tab-minus-style");'), true);
+    console.log('PASS: the tracking-only marker appears in Extensions and the native dash runs independently.');
+
+    await execute('for (let i = 0; i < 30; i++) gBrowser.addTrustedTab("about:blank", { inBackground: true, skipAnimation: true });');
+    await until('return document.getElementById("tabbrowser-arrowscrollbox").hasAttribute("overflowing");');
+    const pseudo = 'return getComputedStyle(document.getElementById("tabbrowser-arrowscrollbox-periphery"), "::after").content;';
+    assert.equal(await execute(pseudo), 'none');
+    await execute('Services.prefs.setBoolPref("sidebar.verticalTabs", false);');
+    await until('return !gBrowser.tabContainer.verticalMode;');
+    assert.equal(await execute(pseudo), 'none');
+    console.log('PASS: the drag area is scoped to a vertical tab strip with room below New Tab.');
   } finally {
     socket?.destroy();
     if (firefox.exitCode === null) firefox.kill();
