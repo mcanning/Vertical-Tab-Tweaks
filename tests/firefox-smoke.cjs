@@ -166,6 +166,8 @@ async function main() {
       'return getComputedStyle(document.querySelector(arguments[0])).opacity;',
       [tabSelector(name) + ' .tab-label'],
     );
+    const faviconFilter = 'getComputedStyle(document.querySelector(arguments[0] + " .tab-icon-image")).filter';
+    const readFilter = name => execute(`return ${faviconFilter};`, [tabSelector(name)]);
     async function hover(name) {
       const selector = tabSelector(name);
       await until(`
@@ -183,15 +185,19 @@ async function main() {
     assert.match(await icon('loaded'), /minus\.svg/);
     assert.equal(await titleOpacity('loaded'), '1');
     assert.equal(await titleOpacity('restored'), '0.65');
+    assert.equal(await readFilter('loaded'), 'none');
+    assert.equal(await readFilter('restored'), 'grayscale(1)');
     await clickAt(await center(closeSelector('loaded')));
     await until('return document.querySelector(arguments[0])?.hasAttribute("pending");', [tabSelector('loaded')]);
     assert.match(await icon('loaded'), /close-12/);
     assert.equal(await titleOpacity('loaded'), '0.65');
+    await until(`return ${faviconFilter}.startsWith("grayscale(1)");`, [tabSelector('loaded')]);
     await execute('gBrowser.selectedTab = document.querySelector(arguments[0]);', [tabSelector('restored')]);
     await hover('restored');
     await until('return document.querySelector(arguments[0]).hasAttribute("data-native-tab-minus");', [closeSelector('restored')]);
     assert.equal(await titleOpacity('restored'), '1');
-    console.log('PASS: the native dash unloads a tab, dims the title, and restores the close icon.');
+    assert.equal(await readFilter('restored'), 'none');
+    console.log('PASS: unloaded tabs dim their titles and use grayscale favicons until they reload.');
 
     const addonId = (await send('Addon:Install', { path: packagePath, temporary: true })).value;
     assert.equal(addonId, 'sidebar-grab-marker@firefox-sidebar-tools.invalid');
