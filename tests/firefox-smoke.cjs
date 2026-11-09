@@ -9,7 +9,7 @@ const profileRoot = path.join(project, '.test-profiles');
 fs.mkdirSync(profileRoot, { recursive: true });
 const runDirectory = fs.mkdtempSync(path.join(profileRoot, 'firefox-'));
 const profile = path.join(runDirectory, 'sidebar-grab-test');
-const packagePath = path.resolve(process.argv[2] || path.join(project, 'dist/sidebar-grab-marker-1.1.0.zip'));
+const packagePath = path.resolve(process.argv[2] || path.join(project, 'dist/vertical-tab-tweaks-1.2.0.zip'));
 
 function prepareFirefox() {
   const source = String.raw`C:\Program Files\Mozilla Firefox`;
@@ -191,7 +191,7 @@ async function main() {
     await until(`
       const row = Array.from(document.querySelectorAll('unified-extensions-item'))
         .find(node => node.extension?.id === arguments[0]);
-      return row?.querySelector('.unified-extensions-item-name')?.textContent === 'Sidebar Grab';
+      return row?.querySelector('.unified-extensions-item-name')?.textContent === 'Vertical Tab Tweaks';
     `, [addonId]);
     await execute('gUnifiedExtensions.panel.hidePopup();');
     await send('Addon:Uninstall', { id: addonId });

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Sidebar Grab",
-  "version": "1.1.0",
+  "name": "Vertical Tab Tweaks",
+  "version": "1.2.0",
   "description": "Tracking entry for native sidebar window dragging, the hover-to-unload dash, and Firefox Acrylic settings.",
   "browser_specific_settings": {
     "gecko": {

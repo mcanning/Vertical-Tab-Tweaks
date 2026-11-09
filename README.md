@@ -1,6 +1,6 @@
-# Firefox Sidebar Tools
+# Vertical Tab Tweaks for Firefox
 
-Drag the Firefox window from the blank area below **New Tab** in its built-in vertical sidebar. Hover over a loaded, unpinned tab and click **−** to unload it. **Sidebar Grab** is the tracking entry in Firefox's Extensions list.
+Drag the Firefox window from the blank area below **New Tab** in its built-in vertical sidebar. Hover over a loaded, unpinned tab and click **−** to unload it. **Vertical Tab Tweaks** is the tracking entry in Firefox's Extensions list.
 
 ## Window dragging
 
@@ -23,7 +23,7 @@ The [native dash files](firefox/native-tab-dash/) use Firefox AutoConfig on Wind
 
 To undo it, close Firefox and remove the preferences file first, then the configuration file. [Mozilla's AutoConfig documentation](https://support.mozilla.org/en-US/kb/customizing-firefox-using-autoconfig)
 
-## Sidebar Grab tracking entry
+## Vertical Tab Tweaks tracking entry
 
 The [add-on](addon/manifest.json) consists of metadata and an icon. Its description in `about:addons` records the native customizations. Install it for a named row in the Extensions menu.
 
@@ -31,7 +31,7 @@ Build the unsigned package in PowerShell from the repository root.
 
 ```powershell
 New-Item -ItemType Directory -Force dist | Out-Null
-Compress-Archive -Path addon\* -DestinationPath dist\sidebar-grab-marker-1.1.0.zip -Force
+Compress-Archive -Path addon\* -DestinationPath dist\vertical-tab-tweaks-1.2.0.zip -Force
 ```
 
 Open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select the ZIP. For a persistent entry in Firefox Release, submit the ZIP for [Mozilla's unlisted signing](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/#self-distribution).
