@@ -162,6 +162,10 @@ async function main() {
     const icon = name => execute(
       'return getComputedStyle(document.querySelector(arguments[0])).listStyleImage;', [closeSelector(name)],
     );
+    const titleOpacity = name => execute(
+      'return getComputedStyle(document.querySelector(arguments[0])).opacity;',
+      [tabSelector(name) + ' .tab-label'],
+    );
     async function hover(name) {
       const selector = tabSelector(name);
       await until(`
@@ -177,13 +181,17 @@ async function main() {
     }
     await hover('loaded');
     assert.match(await icon('loaded'), /minus\.svg/);
+    assert.equal(await titleOpacity('loaded'), '1');
+    assert.equal(await titleOpacity('restored'), '0.65');
     await clickAt(await center(closeSelector('loaded')));
     await until('return document.querySelector(arguments[0])?.hasAttribute("pending");', [tabSelector('loaded')]);
     assert.match(await icon('loaded'), /close-12/);
+    assert.equal(await titleOpacity('loaded'), '0.65');
     await execute('gBrowser.selectedTab = document.querySelector(arguments[0]);', [tabSelector('restored')]);
     await hover('restored');
     await until('return document.querySelector(arguments[0]).hasAttribute("data-native-tab-minus");', [closeSelector('restored')]);
-    console.log('PASS: the native dash unloads a tab and the normal close icon returns.');
+    assert.equal(await titleOpacity('restored'), '1');
+    console.log('PASS: the native dash unloads a tab, dims the title, and restores the close icon.');
 
     const addonId = (await send('Addon:Install', { path: packagePath, temporary: true })).value;
     assert.equal(addonId, 'sidebar-grab-marker@firefox-sidebar-tools.invalid');

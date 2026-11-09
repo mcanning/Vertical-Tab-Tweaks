@@ -19,7 +19,7 @@ The [native dash files](firefox/native-tab-dash/) use Firefox AutoConfig on Wind
 2. Make a copy of `native-tab-minus.cfg` and replace `YOUR_PROFILE_DIRECTORY` with the last folder name from **Profile Folder**.
 3. Copy the configured file to `C:\Program Files\Mozilla Firefox\native-tab-minus.cfg`.
 4. Copy `native-tab-minus-prefs.js` to `C:\Program Files\Mozilla Firefox\defaults\pref\`. If Firefox already has an AutoConfig setup, stop before changing it.
-5. Open Firefox. Hover over a loaded, unpinned tab. Clicking **−** unloads that tab, and Firefox shows **×** afterward.
+5. Open Firefox. Hover over a loaded, unpinned tab. Clicking **−** unloads that tab, and Firefox shows **×** afterward. With the profile stylesheet enabled, an unloaded tab's title dims until the tab reloads.
 
 To undo it, close Firefox and remove the preferences file first, then the configuration file. [Mozilla's AutoConfig documentation](https://support.mozilla.org/en-US/kb/customizing-firefox-using-autoconfig)
 

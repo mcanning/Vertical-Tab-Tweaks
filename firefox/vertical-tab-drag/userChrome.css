@@ -11,4 +11,10 @@
     flex-grow: 1;
     -moz-window-dragging: drag;
   }
+
+  @media (forced-colors: none) {
+    #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[pending]:not([selected]) .tab-label {
+      opacity: 0.65;
+    }
+  }
 }
