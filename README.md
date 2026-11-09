@@ -19,7 +19,7 @@ The [native dash files](firefox/native-tab-dash/) use Firefox AutoConfig on Wind
 2. Make a copy of `native-tab-minus.cfg` and replace `YOUR_PROFILE_DIRECTORY` with the last folder name from **Profile Folder**.
 3. Copy the configured file to `C:\Program Files\Mozilla Firefox\native-tab-minus.cfg`.
 4. Copy `native-tab-minus-prefs.js` to `C:\Program Files\Mozilla Firefox\defaults\pref\`. If Firefox already has an AutoConfig setup, stop before changing it.
-5. Open Firefox. Hover over an unpinned web tab and click **−** to unload it, even if it is still loading. Firefox shows **×** afterward. With the profile stylesheet enabled, the title dims and the favicon turns grayscale until the tab reloads.
+5. Open Firefox. Hover over an unpinned web tab and click **−** to unload it, even if it is still loading. Hover over an empty **New Tab** or an unloaded tab and click **×** to close it. With the profile stylesheet enabled, the title dims and the favicon turns grayscale until the tab reloads.
 6. Middle-click a web tab in the vertical tab list to unload it, including pinned tabs and tabs still loading. An empty **New Tab** or an unloaded tab closes on the first middle-click. Firefox pages that cannot unload stay open.
 
 To undo it, close Firefox and remove the preferences file first, then the configuration file. [Mozilla's AutoConfig documentation](https://support.mozilla.org/en-US/kb/customizing-firefox-using-autoconfig)

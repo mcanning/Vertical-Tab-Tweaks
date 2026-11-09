@@ -143,30 +143,6 @@ async function main() {
       { type: 'pointerDown', button },
       { type: 'pointerUp', button },
     ]);
-    const before = await execute('return gBrowser.tabs.length;');
-    await clickAt(await center('#tabs-newtab-button'));
-    await until('return gBrowser.tabs.length === arguments[0] + 1;', [before]);
-    console.log('PASS: the blank-area CSS loads and New Tab remains clickable.');
-
-    await execute('gBrowser.selectedTab.setAttribute("data-test-tab", "empty-new-tab");');
-    const emptyTab = '[data-test-tab="empty-new-tab"]';
-    await until('return document.querySelector(arguments[0])?.isEmpty;', [emptyTab]);
-    await clickAt(await center(emptyTab), 1);
-    await until('return !document.querySelector(arguments[0]);', [emptyTab]);
-    console.log('PASS: one middle-click closes a fresh New Tab.');
-
-    await execute(`
-      const page = 'data:text/html,' + encodeURIComponent('<title>Dash check</title><p>Dash check</p>');
-      const tabs = {
-        loaded: gBrowser.addTrustedTab(page, { inBackground: true }),
-        pinned: gBrowser.addTrustedTab(page, { inBackground: true, pinned: true }),
-        internal: gBrowser.addTrustedTab('about:preferences', { inBackground: true }),
-        restored: gBrowser.addTrustedTab(page, {
-          inBackground: true, createLazyBrowser: true, lazyTabTitle: 'Restored on demand',
-        }),
-      };
-      for (const [name, tab] of Object.entries(tabs)) tab.setAttribute('data-test-tab', name);
-    `);
     const tabSelector = name => '[data-test-tab="' + name + '"]';
     const closeSelector = name => tabSelector(name) + ' .tab-close-button';
     const icon = name => execute(
@@ -187,6 +163,37 @@ async function main() {
       await pointer([{ type: 'pointerMove', origin: 'viewport', ...await center(selector) }]);
       await until('return document.querySelector(arguments[0]).matches(":hover");', [selector]);
     }
+
+    async function openEmptyTab() {
+      const before = await execute('return gBrowser.tabs.length;');
+      await clickAt(await center('#tabs-newtab-button'));
+      await until('return gBrowser.tabs.length === arguments[0] + 1 && gBrowser.selectedTab.isEmpty;', [before]);
+      await execute('gBrowser.selectedTab.setAttribute("data-test-tab", "empty-new-tab");');
+    }
+    const emptyTab = tabSelector('empty-new-tab');
+    const waitForEmptyTabClose = () => until('return !document.querySelector(arguments[0]);', [emptyTab]);
+    await openEmptyTab();
+    await hover('empty-new-tab');
+    assert.match(await icon('empty-new-tab'), /close-12/);
+    await clickAt(await center(closeSelector('empty-new-tab')));
+    await waitForEmptyTabClose();
+    await openEmptyTab();
+    await clickAt(await center(emptyTab), 1);
+    await waitForEmptyTabClose();
+    console.log('PASS: New Tab opens with one click and closes with either the hover × or one middle-click.');
+
+    await execute(`
+      const page = 'data:text/html,' + encodeURIComponent('<title>Dash check</title><p>Dash check</p>');
+      const tabs = {
+        loaded: gBrowser.addTrustedTab(page, { inBackground: true }),
+        pinned: gBrowser.addTrustedTab(page, { inBackground: true, pinned: true }),
+        internal: gBrowser.addTrustedTab('about:preferences', { inBackground: true }),
+        restored: gBrowser.addTrustedTab(page, {
+          inBackground: true, createLazyBrowser: true, lazyTabTitle: 'Restored on demand',
+        }),
+      };
+      for (const [name, tab] of Object.entries(tabs)) tab.setAttribute('data-test-tab', name);
+    `);
     for (const name of ['pinned', 'internal', 'restored']) {
       await hover(name);
       assert.match(await icon(name), /close-12/);
