@@ -46,6 +46,15 @@ Firefox's built-in sidebar supplies the pinned-tab grid and the **Unload Tab** c
 
 The [Extensions menu switch experiment](experiments/menu-drag-switch/README.md) pairs a regular add-on entry with a profile stylesheet to switch native sidebar dragging on and off.
 
+[Sidebar Grab](experiments/sidebar-grab-marker/manifest.json) is a tracking entry for the Extensions menu. Its description in `about:addons` names the drag stylesheet, hover dash experiment, and Acrylic settings. The package contains only the add-on metadata and icon.
+
+```powershell
+New-Item -ItemType Directory -Force dist | Out-Null
+Compress-Archive -Path experiments\sidebar-grab-marker\* -DestinationPath dist\sidebar-grab-marker-1.0.0.zip -Force
+```
+
+Load the marker through **Load Temporary Add-on** on `about:debugging#/runtime/this-firefox`. Unlisted signing is required for it to stay installed in Firefox Release across restarts.
+
 Native Windows Mica and Acrylic were evaluated as Firefox settings. Both used `widget.windows.mica` set to `true`. The `widget.windows.mica.toplevel-backdrop` value was `1` for Mica and `2` for Acrylic. The Acrylic trial set `widget.windows.mica.popups` to `0`. The off comparison set `widget.windows.mica` to `false`.
 
 ## Verification

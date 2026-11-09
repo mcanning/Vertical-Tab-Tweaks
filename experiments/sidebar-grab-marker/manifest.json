@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Sidebar Grab",
+  "version": "1.0.0",
+  "description": "Tracking entry for the native sidebar drag stylesheet, hover dash experiment, and Firefox Acrylic settings.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "sidebar-grab-marker@firefox-sidebar-tools.invalid",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": { "required": ["none"] }
+    }
+  },
+  "icons": { "48": "icon.svg", "96": "icon.svg" }
+}
