@@ -1,0 +1,14 @@
+/* Use the unused space after New Tab to move the Firefox window. */
+@-moz-document url("chrome://browser/content/browser.xhtml") {
+  #tabbrowser-arrowscrollbox[orient="vertical"]:not([overflowing]) > #tabbrowser-arrowscrollbox-periphery {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  #tabbrowser-arrowscrollbox[orient="vertical"]:not([overflowing]) > #tabbrowser-arrowscrollbox-periphery::after {
+    content: "";
+    flex-grow: 1;
+    -moz-window-dragging: drag;
+  }
+}
